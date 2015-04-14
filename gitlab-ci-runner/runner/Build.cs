@@ -376,14 +376,8 @@ namespace gitlab_ci_runner.runner
 
             // SSH Key Path Fix
 
-            // no need do change dir, because working dir is already set
-
-            // Change to drive
-            // sCmd = sProjectDir.Substring(0, 1) + ":";
-            // Change to directory
-            // sCmd += " && cd " + sProjectDir;
             // Git Reset
-            sCmd = "git reset --hard";
+            sCmd += "git reset --hard";
             // Git Checkout
             sCmd += " && git checkout " + buildInfo.sha;
 
@@ -398,18 +392,8 @@ namespace gitlab_ci_runner.runner
         {
             String sCmd = "";
 
-            // no need do change dir, because working dir is already set
-
-            // Change to drive
-            // sCmd = sProjectDir.Substring(0, 1) + ":";
-            // Change to directory
-            // sCmd += " && cd " + sProjectsDir;
             // Git Clone
             sCmd += "git clone " + buildInfo.repo_url + " " + sProjectDir;
-            // Change to directory
-            // sCmd += " && cd " + sProjectDir;
-            // Git Checkout
-            sCmd += " && git checkout " + buildInfo.sha;
 
             return sCmd;
         }
@@ -422,16 +406,10 @@ namespace gitlab_ci_runner.runner
         {
             String sCmd = "";
 
-            // no need do change dir, because working dir is already set
-
-            // Change to drive
-            // sCmd += sProjectDir.Substring(0, 1) + ":";
-            // Change to directory
-            // sCmd += " && cd " + sProjectDir;
             // Git Reset
             sCmd += "git reset --hard";
             // Git Clean
-            sCmd += " && git clean -f";
+            sCmd += " && git clean -dffx";
             // Git fetch
             sCmd += " && git fetch";
 

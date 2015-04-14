@@ -67,7 +67,6 @@ namespace gitlab_ci_runner.helper
         /// <returns>BuildInfo object or null on error/no build</returns>
         public static BuildInfo getBuild()
         {
-            // reduce the noise
 			var client = new JsonServiceClient (apiurl);
             try {
                 var buildInfo = client.Post(new CheckForBuild {
@@ -78,7 +77,6 @@ namespace gitlab_ci_runner.helper
                     return buildInfo;
                 }
             } catch (WebServiceException ex) {
-                // reduce the noise
                 if (ex.StatusCode != 404)
                     Console.WriteLine("* Failed");
 
@@ -141,9 +139,9 @@ namespace gitlab_ci_runner.helper
                     {
                         returnState = State.SUCCESS;
                         break;
-                    }else if (state == State.SUCCESS && resp != null && resp == "true")
+                    }else if (resp != null && resp == "true")
                     {
-                        returnState = State.SUCCESS;
+                        returnState = state;
                         break;
                     }
 

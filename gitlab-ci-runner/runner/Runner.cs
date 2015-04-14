@@ -113,8 +113,6 @@ namespace gitlab_ci_runner.runner
         /// </summary>
         private static void updateBuild()
         {
-            bool iDontCare = true;
-
             // Build is currently running
             State pushReturnState = pushBuild();
 
@@ -131,8 +129,6 @@ namespace gitlab_ci_runner.runner
             }
             else if (pushReturnState == State.SUCCESS)
             {
-                if (!iDontCare)
-                    Console.WriteLine("[" + DateTime.Now.ToString() + "] * Successfully submitted build status.");
             }
             else
             {
