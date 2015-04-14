@@ -67,7 +67,7 @@ namespace gitlab_ci_runner.helper
         /// <returns>BuildInfo object or null on error/no build</returns>
         public static BuildInfo getBuild()
         {
-            Console.WriteLine("* Checking for builds...");
+            // reduce the noise
 			var client = new JsonServiceClient (apiurl);
             try {
                 var buildInfo = client.Post(new CheckForBuild {
@@ -78,11 +78,10 @@ namespace gitlab_ci_runner.helper
                     return buildInfo;
                 }
             } catch (WebServiceException ex) {
-                if (ex.StatusCode == 404) {
-                    Console.WriteLine("* Nothing");
-                } else {
+                // reduce the noise
+                if (ex.StatusCode != 404)
                     Console.WriteLine("* Failed");
-                }
+
             } catch (Exception ex) {
                 Console.WriteLine("* Uncaught exception ocurred:: {0}", ex.Message);
             }
@@ -99,8 +98,6 @@ namespace gitlab_ci_runner.helper
         /// <returns></returns>
         public static State pushBuild(int iId, State state, string sTrace)
         {
-            Console.WriteLine("[" + DateTime.Now + "] Submitting build " + iId + " to coordinator ...");
-        
             State returnState = State.FAILED;
             var stateValue = "";
             if (state == State.RUNNING)
@@ -140,13 +137,15 @@ namespace gitlab_ci_runner.helper
                         state = stateValue,
                         trace = trace.ToString () });
 
-                    if (resp != null && resp == "null")
+                    if (state == State.RUNNING && resp != null && resp == "null")
                     {
                         returnState = State.SUCCESS;
-                        Console.WriteLine("* Success");
+                        break;
+                    }else if (state == State.SUCCESS && resp != null && resp == "true")
+                    {
+                        returnState = State.SUCCESS;
                         break;
                     }
-
 
                     iTry++;
                     Thread.Sleep(1000);
@@ -154,23 +153,20 @@ namespace gitlab_ci_runner.helper
             }
             catch (WebServiceException ex)
             {
-                Console.WriteLine("[" + DateTime.Now.ToString() + "] Got response when pushing build status :", ex.Message);
-
+                Console.WriteLine();
                 switch (ex.StatusCode)
                 {
                     case 200:
                         returnState = State.SUCCESS;
-                        Console.WriteLine("* Success");
                         break;
                     case 404:
                         returnState = State.ABORTED;
-                        Console.WriteLine("* Aborted");
                         break;
                     default:
-                        Console.WriteLine("* Failed");
                         returnState = State.FAILED;
                         break;
                 }
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] Got response when pushing build status [{0}]: {1}", returnState.ToString(), ex.Message);
             }
 
             return returnState;
