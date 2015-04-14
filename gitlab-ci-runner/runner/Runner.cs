@@ -113,6 +113,8 @@ namespace gitlab_ci_runner.runner
         /// </summary>
         private static void updateBuild()
         {
+            bool iDontCare = true;
+
             // Build is currently running
             State pushReturnState = pushBuild();
 
@@ -129,7 +131,8 @@ namespace gitlab_ci_runner.runner
             }
             else if (pushReturnState == State.SUCCESS)
             {
-                Console.WriteLine("[" + DateTime.Now.ToString() + "] * Successfully submitted build status.");
+                if (!iDontCare)
+                    Console.WriteLine("[" + DateTime.Now.ToString() + "] * Successfully submitted build status.");
             }
             else
             {
@@ -161,6 +164,7 @@ namespace gitlab_ci_runner.runner
                 build = new Build(binfo);
                 Console.WriteLine("[" + DateTime.Now.ToString() + "] Build " + binfo.id + " started...");
                 Thread t = new Thread(build.run);
+                t.Name = build.buildInfo.id.ToString();
                 t.Start();
             }
         }
