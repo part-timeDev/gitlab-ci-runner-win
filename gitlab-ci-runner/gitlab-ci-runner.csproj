@@ -56,7 +56,6 @@
     <Compile Include="helper\Win32IntegrityLevel.cs" />
     <Compile Include="helper\IniFile.cs" />
     <Compile Include="helper\Network.cs" />
-    <Compile Include="helper\SSHKey.cs" />
     <Compile Include="helper\TextFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
