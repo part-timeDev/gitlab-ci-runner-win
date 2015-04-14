@@ -18,6 +18,14 @@ namespace gitlab_ci_runner.setup
             Console.WriteLine("please provide the following info to proceed:");
             Console.WriteLine();
 
+            String sWorkingDir = "";
+            while (sWorkingDir == "")
+            {
+                Console.WriteLine("Please enter the build working dir (e.g. D:\\Work\\ )");
+                sWorkingDir = Console.ReadLine();
+            }
+            Config.workingdir = sWorkingDir;
+
             // Read coordinator URL
             String sCoordUrl = "";
             while (sCoordUrl == "")

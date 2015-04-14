@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Management;
 using gitlab_ci_runner.api;
+using gitlab_ci_runner.conf;
 using Microsoft.Experimental.IO;
 
 namespace gitlab_ci_runner.runner
@@ -21,7 +22,7 @@ namespace gitlab_ci_runner.runner
         public Build(BuildInfo buildInfo)
         {
             this.buildInfo = buildInfo;
-            sProjectDir = sProjectsDir + @"\project-" + buildInfo.project_id;
+            sProjectDir = Path.Combine(sProjectsDir, helper.PathHelper.makeValidPath(buildInfo.project_name));
             commands = new LinkedList<string>();
             outputList = new ConcurrentQueue<string>();
             state = State.WAITING;
@@ -99,7 +100,7 @@ namespace gitlab_ci_runner.runner
         /// <summary>
         /// Projects Directory
         /// </summary>
-        private string sProjectsDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\projects";
+        private string sProjectsDir = Config.workingdir;
 
         /// <summary>
         /// Project Directory
@@ -147,9 +148,13 @@ namespace gitlab_ci_runner.runner
                 // Add build commands
                 foreach (string sCommand in buildInfo.GetCommands ())
                 {
+                    // Skip empty lines
+                    if (String.IsNullOrEmpty(sCommand.Trim()))
+                        continue;
+
                     commands.AddLast(sCommand);
                 }
-    
+
                 // Execute
                 foreach (string sCommand in commands)
                 {
@@ -243,9 +248,7 @@ namespace gitlab_ci_runner.runner
                 sCommand = sCommand.Trim();
 
                 // Output command
-                outputList.Enqueue("");
                 outputList.Enqueue(sCommand);
-                outputList.Enqueue("");
 
                 // Build process
                 if (process == null)
@@ -282,6 +285,7 @@ namespace gitlab_ci_runner.runner
                 process.StartInfo.EnvironmentVariables["CI_BUILD_REF"] = buildInfo.sha;
                 process.StartInfo.EnvironmentVariables["CI_BUILD_REF_NAME"] = buildInfo.@ref;
                 process.StartInfo.EnvironmentVariables["CI_BUILD_ID"] = buildInfo.id.ToString();
+                process.StartInfo.EnvironmentVariables["GIT_SSL_NO_VERIFY"] = "true";
 
                 // Redirect Standard Output and Standard Error
                 process.StartInfo.RedirectStandardOutput = true;
@@ -372,12 +376,8 @@ namespace gitlab_ci_runner.runner
 
             // SSH Key Path Fix
 
-            // Change to drive
-            sCmd = sProjectDir.Substring(0, 1) + ":";
-            // Change to directory
-            sCmd += " && cd " + sProjectDir;
             // Git Reset
-            sCmd += " && git reset --hard";
+            sCmd += "git reset --hard";
             // Git Checkout
             sCmd += " && git checkout " + buildInfo.sha;
 
@@ -392,16 +392,8 @@ namespace gitlab_ci_runner.runner
         {
             String sCmd = "";
 
-            // Change to drive
-            sCmd = sProjectDir.Substring(0, 1) + ":";
-            // Change to directory
-            sCmd += " && cd " + sProjectsDir;
             // Git Clone
-            sCmd += " && git clone " + buildInfo.repo_url + " project-" + buildInfo.project_id;
-            // Change to directory
-            sCmd += " && cd " + sProjectDir;
-            // Git Checkout
-            sCmd += " && git checkout " + buildInfo.sha;
+            sCmd += "git clone " + buildInfo.repo_url + " " + sProjectDir;
 
             return sCmd;
         }
@@ -414,14 +406,10 @@ namespace gitlab_ci_runner.runner
         {
             String sCmd = "";
 
-            // Change to drive
-            sCmd = sProjectDir.Substring(0, 1) + ":";
-            // Change to directory
-            sCmd += " && cd " + sProjectDir;
             // Git Reset
-            sCmd += " && git reset --hard";
+            sCmd += "git reset --hard";
             // Git Clean
-            sCmd += " && git clean -f";
+            sCmd += " && git clean -dffx";
             // Git fetch
             sCmd += " && git fetch";
 

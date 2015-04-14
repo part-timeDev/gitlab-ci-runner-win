@@ -22,6 +22,11 @@ namespace gitlab_ci_runner.conf
         public static string token;
 
         /// <summary>
+        /// Working dir for the builds
+        /// </summary>
+        public static string workingdir;
+
+        /// <summary>
         /// Configuration Path
         /// </summary>
         private static string confPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\runner.cfg";
@@ -36,6 +41,7 @@ namespace gitlab_ci_runner.conf
                 IniFile ini = new IniFile(confPath);
                 url = ini.IniReadValue("main", "url");
                 token = ini.IniReadValue("main", "token");
+                workingdir = ini.IniReadValue("main", "workingdir");
             }
         }
 
@@ -52,6 +58,7 @@ namespace gitlab_ci_runner.conf
             IniFile ini = new IniFile(confPath);
             ini.IniWriteValue("main", "url", url);
             ini.IniWriteValue("main", "token", token);
+            ini.IniWriteValue("main", "workingdir", workingdir);
         }
 
         /// <summary>
@@ -60,7 +67,7 @@ namespace gitlab_ci_runner.conf
         /// <returns>true if configured, false if not</returns>
         public static bool isConfigured()
         {
-            if (url != null && url != "" && token != null && token != "")
+            if (!String.IsNullOrEmpty(url) && !String.IsNullOrEmpty(token) && !String.IsNullOrEmpty(workingdir))
             {
                 return true;
             }
