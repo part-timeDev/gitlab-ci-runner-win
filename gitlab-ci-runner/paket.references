@@ -1,0 +1,5 @@
+Microsoft.Experimental.IO
+NDesk.Options
+ServiceStack.Client
+ServiceStack.Interfaces
+ServiceStack.Text

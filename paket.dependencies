@@ -1,0 +1,8 @@
+source https://nuget.org/api/v2
+
+nuget Nuget.CommandLine 2.8.3
+nuget Microsoft.Experimental.IO 1.0.0.0 framework: >= net40
+nuget NDesk.Options 0.2.1 framework: >= net40
+nuget ServiceStack.Client 4.0.20 framework: >= net40
+nuget ServiceStack.Interfaces 4.0.20 framework: >= net40
+nuget ServiceStack.Text 4.0.20 framework: >= net40
