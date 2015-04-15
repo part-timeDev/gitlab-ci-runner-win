@@ -68,7 +68,6 @@ namespace gitlab_ci_runner.runner
             }
         }
 
-
         /// <summary>
         /// Command output
         /// Build internal!
@@ -160,7 +159,9 @@ namespace gitlab_ci_runner.runner
                 {
                     if (!exec(sCommand))
                     {
-                        state = State.FAILED;
+                        // only change the state if not already aborted 
+                        if (state != State.ABORTED)
+                            state = State.FAILED;
                         break;
                     }
                 }
@@ -322,12 +323,6 @@ namespace gitlab_ci_runner.runner
                             Console.WriteLine("[" + DateTime.Now.ToString() + "] Process " + process.Id + " hasn't exited properly. Exit code might be invalid.");
                         }
                     }
-                    /*
-                    if (!process.WaitForExit(iTimeout * 1000))
-                    {
-                        killProcessAndChildren(process.Id);
-                    }
-                    */
                     // Terminate process
                     killProcessAndChildren(process.Id);
                     return (exitCode == 0);
@@ -340,7 +335,9 @@ namespace gitlab_ci_runner.runner
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[" + DateTime.Now.ToString() + "] Process " + process.Id + " failed with exception:  " + ex.Message);
+                // if process is killed, this could throw an unhandled exception, if we try to print out process.id
+                if (process != null)
+                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Process " + process.Id + " failed with exception:  " + ex.Message);
                 return false;
             }
         }
@@ -372,16 +369,12 @@ namespace gitlab_ci_runner.runner
         /// <returns>Checkout CMD</returns>
         private string checkoutCmd()
         {
-            String sCmd = "";
+            String[] sCmd = {
+                                 "git reset --hard"
+                               , "git checkout " + buildInfo.sha
+                            };
 
-            // SSH Key Path Fix
-
-            // Git Reset
-            sCmd += "git reset --hard";
-            // Git Checkout
-            sCmd += " && git checkout " + buildInfo.sha;
-
-            return sCmd;
+            return String.Join(" && ", sCmd);
         }
 
         /// <summary>
@@ -390,12 +383,12 @@ namespace gitlab_ci_runner.runner
         /// <returns>Clone CMD</returns>
         private string cloneCmd()
         {
-            String sCmd = "";
+            String[] sCmd = { 
+                                  "git clone " + buildInfo.repo_url + " " + sProjectDir
+                                , "git checkout " + buildInfo.sha
+                            };
 
-            // Git Clone
-            sCmd += "git clone " + buildInfo.repo_url + " " + sProjectDir;
-
-            return sCmd;
+            return String.Join(" && ", sCmd);
         }
 
         /// <summary>
@@ -404,16 +397,14 @@ namespace gitlab_ci_runner.runner
         /// <returns>Fetch CMD</returns>
         private string fetchCmd()
         {
-            String sCmd = "";
+            String[] sCmd = { 
+                                  "git reset --hard"
+                                , "git clean -fdx"
+                                , "git remote set-url origin " + buildInfo.repo_url
+                                , "git fetch origin"
+                            };
 
-            // Git Reset
-            sCmd += "git reset --hard";
-            // Git Clean
-            sCmd += " && git clean -dffx";
-            // Git fetch
-            sCmd += " && git fetch";
-
-            return sCmd;
+            return String.Join(" && ", sCmd);
         }
 
         /// <summary>
