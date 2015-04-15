@@ -24,7 +24,7 @@ namespace gitlab_ci_runner.runner
         {
             this.buildInfo = buildInfo;
             sProjectDir = Path.Combine(sProjectsDir, helper.PathHelper.makeValidPath(buildInfo.project_name));
-            commands = new LinkedList<string>();
+            commands = new List<Command>();
             outputList = new ConcurrentQueue<string>();
             state = State.WAITING;
         }
@@ -115,7 +115,7 @@ namespace gitlab_ci_runner.runner
         /// <summary>
         /// Command list
         /// </summary>
-        private LinkedList<string> commands;
+        private List<Command> commands;
 
         /// <summary>
         /// Execution State
@@ -146,17 +146,17 @@ namespace gitlab_ci_runner.runner
                 initProjectDir();
     
                 // Add build commands
-                foreach (string sCommand in buildInfo.GetCommands ())
+                foreach (string sCommand in buildInfo.GetCommands())
                 {
                     // Skip empty lines
                     if (String.IsNullOrEmpty(sCommand.Trim()))
                         continue;
 
-                    commands.AddLast(sCommand);
+                    commands.Add(new Command(sCommand));
                 }
 
                 // Execute
-                foreach (string sCommand in commands)
+                foreach (Command sCommand in commands)
                 {
                     if (!exec(sCommand))
                     {
@@ -224,8 +224,8 @@ namespace gitlab_ci_runner.runner
             if (Directory.Exists(sProjectDir + @"\.git") && buildInfo.allow_git_fetch)
             {
                 // Already a git repo, pull changes
-                commands.AddLast(fetchCmd());
-                commands.AddLast(checkoutCmd());
+                commands.Add(fetchCmd());
+                commands.Add(checkoutCmd());
             }
             else
             {
@@ -233,19 +233,17 @@ namespace gitlab_ci_runner.runner
                 if (Directory.Exists(sProjectDir))
                     DeleteDirectory(sProjectDir);
 
-                commands.AddLast(cloneCmd());
-                commands.AddLast(checkoutCmd());
+                commands.Add(cloneCmd());
+                commands.Add(checkoutCmd());
             }
         }
 
-        /// <summary>
-        /// Execute a command
-        /// </summary>
-        /// <param name="sCommand">Command to execute</param>
-        private bool exec(string sCommand)
+        private bool exec(Command command)
         {
             try
             {
+                var sCommand = command.ToString();
+
                 // Remove Whitespaces
                 sCommand = sCommand.Trim();
 
@@ -364,33 +362,30 @@ namespace gitlab_ci_runner.runner
             }
         }
 
-        private string checkoutCmd()
+        private Command checkoutCmd()
         {
             return
                 new Command()
                     .Add("git reset --hard")
-                    .Add("git checkout " + buildInfo.sha)
-                    .ToString();
+                    .Add("git checkout " + buildInfo.sha);
         }
 
-        private string cloneCmd()
+        private Command cloneCmd()
         {
             return
                 new Command()
                     .Add("git clone " + buildInfo.repo_url + " " + sProjectDir)
-                    .Add("git checkout " + buildInfo.sha)
-                    .ToString();
+                    .Add("git checkout " + buildInfo.sha);
         }
 
-        private string fetchCmd()
+        private Command fetchCmd()
         {
             return
                 new Command()
                     .Add("git reset --hard")
                     .Add("git clean -fdx")
                     .Add("git remote set-url origin " + buildInfo.repo_url)
-                    .Add("git fetch origin")
-                    .ToString();
+                    .Add("git fetch origin");
         }
 
         /// <summary>

@@ -9,6 +9,17 @@ namespace gitlab_ci_runner.helper
     {
         List<string> steps = new List<string>();
 
+        public Command()
+        {
+
+        }
+
+        public Command(string step)
+        {
+            steps.Add(step);
+        }
+
+
         public Command Add(string step)
         {
             steps.Add(step);
