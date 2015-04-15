@@ -10,6 +10,7 @@ using System.Management;
 using gitlab_ci_runner.api;
 using gitlab_ci_runner.conf;
 using Microsoft.Experimental.IO;
+using gitlab_ci_runner.helper;
 
 namespace gitlab_ci_runner.runner
 {
@@ -363,48 +364,33 @@ namespace gitlab_ci_runner.runner
             }
         }
 
-        /// <summary>
-        /// Get the Checkout CMD
-        /// </summary>
-        /// <returns>Checkout CMD</returns>
         private string checkoutCmd()
         {
-            String[] sCmd = {
-                                 "git reset --hard"
-                               , "git checkout " + buildInfo.sha
-                            };
-
-            return String.Join(" && ", sCmd);
+            return
+                new Command()
+                    .Add("git reset --hard")
+                    .Add("git checkout " + buildInfo.sha)
+                    .ToString();
         }
 
-        /// <summary>
-        /// Get the Clone CMD
-        /// </summary>
-        /// <returns>Clone CMD</returns>
         private string cloneCmd()
         {
-            String[] sCmd = { 
-                                  "git clone " + buildInfo.repo_url + " " + sProjectDir
-                                , "git checkout " + buildInfo.sha
-                            };
-
-            return String.Join(" && ", sCmd);
+            return
+                new Command()
+                    .Add("git clone " + buildInfo.repo_url + " " + sProjectDir)
+                    .Add("git checkout " + buildInfo.sha)
+                    .ToString();
         }
 
-        /// <summary>
-        /// Get the Fetch CMD
-        /// </summary>
-        /// <returns>Fetch CMD</returns>
         private string fetchCmd()
         {
-            String[] sCmd = { 
-                                  "git reset --hard"
-                                , "git clean -fdx"
-                                , "git remote set-url origin " + buildInfo.repo_url
-                                , "git fetch origin"
-                            };
-
-            return String.Join(" && ", sCmd);
+            return
+                new Command()
+                    .Add("git reset --hard")
+                    .Add("git clean -fdx")
+                    .Add("git remote set-url origin " + buildInfo.repo_url)
+                    .Add("git fetch origin")
+                    .ToString();
         }
 
         /// <summary>
