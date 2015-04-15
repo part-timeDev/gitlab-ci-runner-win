@@ -150,7 +150,6 @@ namespace gitlab_ci_runner.helper
             }
             catch (WebServiceException ex)
             {
-                Console.WriteLine();
                 switch (ex.StatusCode)
                 {
                     case 200:
@@ -161,11 +160,10 @@ namespace gitlab_ci_runner.helper
                         break;
                     default:
                         returnState = State.FAILED;
+                        Console.WriteLine("[" + DateTime.Now.ToString() + "] Got response when pushing build status [{0}]: {1}", returnState.ToString(), ex.Message);
                         break;
                 }
-                Console.WriteLine("[" + DateTime.Now.ToString() + "] Got response when pushing build status [{0}]: {1}", returnState.ToString(), ex.Message);
             }
-
             return returnState;
         }
     }
