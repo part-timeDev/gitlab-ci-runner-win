@@ -19,7 +19,6 @@ namespace gitlab_ci_runner.helper
             steps.Add(step);
         }
 
-
         public Command Add(string step)
         {
             steps.Add(step);
@@ -28,7 +27,15 @@ namespace gitlab_ci_runner.helper
 
         public override string ToString()
         {
-            return String.Join(" && ", steps);
+            List<string> finalsteps = new List<string>();
+            foreach (string part in this.steps)
+            {
+                if (String.IsNullOrEmpty(part.Trim()))
+                    continue;
+
+                finalsteps.Add(part.Trim());
+            }
+            return String.Join(" && ", finalsteps);
         }
     }
 }
