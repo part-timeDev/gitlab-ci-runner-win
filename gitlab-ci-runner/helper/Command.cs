@@ -16,26 +16,21 @@ namespace gitlab_ci_runner.helper
 
         public Command(string step)
         {
-            steps.Add(step);
+            if (!String.IsNullOrEmpty(step.Trim()))
+                steps.Add(step.Trim());
         }
 
         public Command Add(string step)
         {
-            steps.Add(step);
+            if (!String.IsNullOrEmpty(step.Trim()))
+                steps.Add(step.Trim());
+
             return this;
         }
 
         public override string ToString()
         {
-            List<string> finalsteps = new List<string>();
-            foreach (string part in this.steps)
-            {
-                if (String.IsNullOrEmpty(part.Trim()))
-                    continue;
-
-                finalsteps.Add(part.Trim());
-            }
-            return String.Join(" && ", finalsteps);
+            return String.Join(" && ", steps);
         }
     }
 }

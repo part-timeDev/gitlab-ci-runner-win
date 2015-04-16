@@ -238,8 +238,8 @@ namespace gitlab_ci_runner.runner
             {
                 var sCommand = command.ToString();
 
-                // Remove Whitespaces
-                sCommand = sCommand.Trim();
+                if (String.IsNullOrEmpty(sCommand))
+                    return true;
 
                 // Output command
                 outputList.Enqueue(sCommand);
