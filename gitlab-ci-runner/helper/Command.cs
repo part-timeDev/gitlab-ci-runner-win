@@ -16,8 +16,7 @@ namespace gitlab_ci_runner.helper
 
         public Command(string step)
         {
-            if (!String.IsNullOrEmpty(step.Trim()))
-                steps.Add(step.Trim());
+            Add(step);
         }
 
         public Command Add(string step)
