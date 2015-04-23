@@ -14,6 +14,7 @@ namespace gitlab_ci_runner.runner
         /// Build process
         /// </summary>
         private static Build build = null;
+        private static DateTime buildstarttime;
 
         /// <summary>
         /// Start the configured runner
@@ -22,6 +23,7 @@ namespace gitlab_ci_runner.runner
         {
             Console.WriteLine("* Gitlab CI Runner started");
             Console.WriteLine("* Waiting for builds");
+            Console.WriteLine("----------------------------------------------------------");
             waitForBuild();
         }
 
@@ -81,28 +83,30 @@ namespace gitlab_ci_runner.runner
             // Get build status
             State currentState = build.state;
 
+            Console.Write("[{0}] Build {1} ", DateTime.Now, build.buildInfo.id);
             if (currentState == State.SUCCESS)
             {
-                Console.WriteLine("[" + DateTime.Now.ToString() + "] Completed build " + build.buildInfo.id +".");
+                Console.WriteLine("completed.");
             }
             else if (currentState == State.FAILED)
             {
-                Console.WriteLine("[" + DateTime.Now.ToString() + "] Build " + build.buildInfo.id +" failed");
+                Console.WriteLine("failed.");
             }
             else if (currentState == State.ABORTED)
             {
-                Console.WriteLine("[" + DateTime.Now.ToString() + "] Build " + build.buildInfo.id + " was aborted.");
+                Console.WriteLine("was aborted.");
             }
             else
             {
-                Console.WriteLine("[" + DateTime.Now.ToString() + "] Something went wrong when completing build" + build.buildInfo.id + ".");
+                Console.WriteLine("... Something went wrong when completing build.");
             }
             
             // Push the final status
             pushBuild();
 
-            Console.WriteLine("--------------------------------------------------------");
-
+            TimeSpan buildruntime = (DateTime.Now - buildstarttime);
+            Console.WriteLine("[{0}] Build {1} runtime : {2,2}h {3,2}min {4,2}sec", DateTime.Now, build.buildInfo.id, buildruntime.Hours, buildruntime.Minutes, buildruntime.Seconds);
+            Console.WriteLine("----------------------------------------------------------");
 
             build.terminate();
             build = null;
@@ -162,6 +166,7 @@ namespace gitlab_ci_runner.runner
                 Thread t = new Thread(build.run);
                 t.Name = build.buildInfo.id.ToString();
                 t.Start();
+                buildstarttime = DateTime.Now;
             }
         }
     }
