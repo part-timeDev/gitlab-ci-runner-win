@@ -70,6 +70,10 @@ namespace gitlab_ci_runner.helper
                     }
                 }
             }
+
+            if (shrinkOutput)
+                returnValue.Append("NOTE: detailed output is shown after the build finished.").Append("\n");
+
             if (printTestResults)
             {
                 returnValue.Append("\n");

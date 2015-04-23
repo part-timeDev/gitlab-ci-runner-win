@@ -105,7 +105,7 @@ namespace gitlab_ci_runner.runner
             pushBuild();
 
             TimeSpan buildruntime = (DateTime.Now - buildstarttime);
-            Console.WriteLine("[{0}] Build {1} runtime : {2,2}h {3,2}min {4,2}sec", DateTime.Now, build.buildInfo.id, buildruntime.Hours, buildruntime.Minutes, buildruntime.Seconds);
+            Console.WriteLine("[{0}] Build {1} runtime: {2,2}h {3,2}min {4,2}sec", DateTime.Now, build.buildInfo.id, buildruntime.Hours, buildruntime.Minutes, buildruntime.Seconds);
             Console.WriteLine("----------------------------------------------------------");
 
             build.terminate();
