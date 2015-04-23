@@ -30,7 +30,7 @@ namespace gitlab_ci_runner.setup
             String sCoordUrl = "";
             while (sCoordUrl == "")
             {
-                Console.WriteLine("Please enter the gitlab-ci coordinator URL (e.g. http(s)://gitlab-ci.org:3000/ )");
+                Console.WriteLine("Please enter the gitlab-ci coordinator URL (e.g. http(s)://gitlab-ci.org/ )");
                 sCoordUrl = Console.ReadLine();
             }
             Config.url = sCoordUrl;
