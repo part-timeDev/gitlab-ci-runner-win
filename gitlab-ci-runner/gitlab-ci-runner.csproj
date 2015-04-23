@@ -54,6 +54,7 @@
     <Compile Include="conf\Config.cs" />
     <Compile Include="helper\Command.cs" />
     <Compile Include="helper\PathHelper.cs" />
+    <Compile Include="helper\OutputParser.cs" />
     <Compile Include="helper\Win32IntegrityLevel.cs" />
     <Compile Include="helper\IniFile.cs" />
     <Compile Include="helper\Network.cs" />

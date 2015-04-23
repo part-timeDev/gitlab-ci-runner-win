@@ -96,6 +96,9 @@ namespace gitlab_ci_runner.helper
         public static State pushBuild(int iId, State state, string sTrace)
         {
             State returnState = State.FAILED;
+            bool shrinkOutput = true;
+            bool printTestResults = false;
+
             var stateValue = "";
             if (state == State.RUNNING)
             {
@@ -104,6 +107,8 @@ namespace gitlab_ci_runner.helper
             else if (state == State.SUCCESS)
             {
                 stateValue = "success";
+                shrinkOutput = false;
+                printTestResults = true;
             }
             else if (state == State.FAILED)
             {
@@ -117,10 +122,14 @@ namespace gitlab_ci_runner.helper
             {
                 stateValue = "waiting";
             }
-            
-            var trace = new StringBuilder();
-            foreach (string t in sTrace.Split('\n'))
-                trace.Append(t).Append("\n");
+
+            if (state == State.SUCCESS || state == State.FAILED || state == State.ABORTED)
+            {
+                shrinkOutput = false;
+                printTestResults = true;
+            }
+
+            var trace = OutputParser.prettify(sTrace, shrinkOutput, printTestResults);
 
             int iTry = 0;
             try
