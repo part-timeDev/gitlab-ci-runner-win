@@ -13,16 +13,19 @@ namespace gitlab_ci_runner.helper
             StringComparison sco = StringComparison.CurrentCultureIgnoreCase;
 
             StringBuilder returnValue = new StringBuilder();
+            StringBuilder failedTests = new StringBuilder();
             bool NextLines = false;
+            bool runningTests = false;
 
             int success = 0;
             int failed = 0;
             int ignored = 0;
 
-            string successpattern = @"Test:? .*? ==>? OK";
-            string failurepattern = @"Test:? .*? ==>? failed";
-            string ignoredpattern = @"Test:? .*? ==>? ignored";
-            string pattern = @"Test:? .*? ==>? (OK|failed|ignored)";
+            string successpattern = "OK";
+            string failurepattern = "failed";
+            string ignoredpattern = "ignored";
+            string testresultpattern = @"Test: (.*? )(==>)? ?(" + successpattern + "|" + failurepattern + "|" + ignoredpattern + ")";
+            int testresult = 3;
 
             if (!String.IsNullOrEmpty(log))
             {
@@ -47,23 +50,28 @@ namespace gitlab_ci_runner.helper
                             || line.StartsWith("Starting Target: FixLineBreaks", sco)
                             || line.StartsWith("Starting FinalTarget:", sco))
                             NextLines = false;
+
+                        if (line.StartsWith("--- enter runTestTargetBody() ---", sco))
+                            runningTests = true;
                     }
                     else
                         returnValue.Append(line).Append("\n");
 
-                    if (printTestResults)
+                    if (printTestResults || runningTests)
                     {
-                        if (Regex.IsMatch(line, pattern))
+                        MatchCollection mc = Regex.Matches(line, testresultpattern);
+                        if (mc.Count > 0)
                         {
-                            MatchCollection mc = Regex.Matches(line, pattern);
-
                             foreach (Match part in mc)
                             {
-                                if (Regex.IsMatch(part.ToString(), successpattern))
+                                if (part.Groups[testresult].Value.Equals(successpattern, sco))
                                     success++;
-                                else if (Regex.IsMatch(part.ToString(), failurepattern))
+                                else if (part.Groups[testresult].Value.Equals(failurepattern, sco))
+                                {
+                                    failedTests.Append(String.Format("Test {0}==> {1}", part.Groups[1].Value, failurepattern)).Append("\n");
                                     failed++;
-                                else if (Regex.IsMatch(part.ToString(), ignoredpattern))
+                                }
+                                else if (part.Groups[testresult].Value.Equals(ignoredpattern, sco))
                                     ignored++;
                             }
                         }
@@ -71,16 +79,27 @@ namespace gitlab_ci_runner.helper
                 }
             }
 
+            if (printTestResults || runningTests)
+            {
+                string state = "progress";
+
+                if (!shrinkOutput)
+                    state = "results";
+
+                returnValue.Append("\n");
+                if (failedTests.Length > 0)
+                {
+                    returnValue.Append(String.Format("--- Failed Tests ----------------------------------------------------\n"));
+                    returnValue.Append(failedTests);
+                }
+                returnValue.Append(String.Format("---------------------------------------------------------------------\n"));
+                returnValue.Append(String.Format("Test {0}: {1} total, {2} success, {3} failed, {4} ignored\n", state, (success + failed + ignored), success, failed, ignored));
+                returnValue.Append(String.Format("---------------------------------------------------------------------\n"));
+            }
+
             if (shrinkOutput)
                 returnValue.Append("NOTE: detailed output is shown after the build finished.").Append("\n");
 
-            if (printTestResults)
-            {
-                returnValue.Append("\n");
-                returnValue.Append(String.Format("---------------------------------------------------------------------\n"));
-                returnValue.Append(String.Format("Test results: {0} total, {1} success, {2} failed, {3} ignored\n", (success + failed + ignored), success, failed, ignored));
-                returnValue.Append(String.Format("---------------------------------------------------------------------\n"));
-            }
             return returnValue;
         }
     }
