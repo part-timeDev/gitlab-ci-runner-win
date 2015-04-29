@@ -17,6 +17,9 @@ namespace gitlab_ci_runner {
         static OptionSet ApplicationArgs;
         static bool IgnoreIntegrityLevelCheck = false;
         static void Main(string[] args) {
+
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(unhandledExceptionHandler);
+
             Console.InputEncoding = Encoding.Default;
             Console.OutputEncoding = Encoding.Default;
             ApplicationArgs = new OptionSet() {
@@ -106,6 +109,15 @@ namespace gitlab_ci_runner {
                                     System.Net.Security.SslPolicyErrors sslPolicyErrors) {
                 return true; // **** Always accept
             };
+        }
+
+        static void unhandledExceptionHandler(object sender, UnhandledExceptionEventArgs args)
+        {
+            Exception e = (Exception)args.ExceptionObject;
+            if (Environment.UserInteractive)
+            {
+                System.Console.WriteLine("{0}\n{1}", e, e.Message);
+            }
         }
     }
 }
