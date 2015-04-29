@@ -48,16 +48,16 @@ namespace gitlab_ci_runner.helper
 						Console.WriteLine ("Runner registered with id {0}", authToken.id);
 						return authToken.token;
 				}
-				else
-				{
-					return null;
-				}
 			}
 			catch(WebException ex)
 			{
 				Console.WriteLine ("Error while registering runner :", ex.Message);
-				return null;
-			}          
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Network:registerRunner] Error: {0}\n{1}", ex.Message, ex.InnerException);
+            }
+            return null;
         }
 
         /// <summary>
@@ -79,8 +79,10 @@ namespace gitlab_ci_runner.helper
                 if (ex.StatusCode != 404)
                     Console.WriteLine("* Failed");
 
-            } catch (Exception ex) {
-                Console.WriteLine("* Uncaught exception ocurred:: {0}", ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Network:getBuild] Error: {0}\n{1}", ex.Message, ex.InnerException);
             }
 
             return null;
@@ -96,8 +98,8 @@ namespace gitlab_ci_runner.helper
         public static State pushBuild(int iId, State state, string sTrace)
         {
             State returnState = State.FAILED;
-            bool shrinkOutput = true;
-            bool printTestResults = false;
+            bool shrinkOutput = true;       // Maybe make it configurable somewhere
+            bool printTestResults = true;   // Maybe make it configurable somewhere
 
             var stateValue = "";
             if (state == State.RUNNING)
@@ -107,8 +109,6 @@ namespace gitlab_ci_runner.helper
             else if (state == State.SUCCESS)
             {
                 stateValue = "success";
-                shrinkOutput = false;
-                printTestResults = true;
             }
             else if (state == State.FAILED)
             {
@@ -126,7 +126,6 @@ namespace gitlab_ci_runner.helper
             if (state == State.SUCCESS || state == State.FAILED || state == State.ABORTED)
             {
                 shrinkOutput = false;
-                printTestResults = true;
             }
 
             var trace = OutputParser.prettify(sTrace, shrinkOutput, printTestResults);
@@ -172,6 +171,9 @@ namespace gitlab_ci_runner.helper
                         Console.WriteLine("[" + DateTime.Now.ToString() + "] Got response when pushing build status [{0}]: {1}", returnState.ToString(), ex.Message);
                         break;
                 }
+            } catch (Exception ex)
+            {
+                Console.WriteLine("[Network:pushBuild] Error: {0}\n{1}",ex.Message,ex.InnerException);
             }
             return returnState;
         }
