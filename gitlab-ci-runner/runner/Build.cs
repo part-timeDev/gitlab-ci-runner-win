@@ -27,6 +27,7 @@ namespace gitlab_ci_runner.runner
             commands = new List<Command>();
             outputList = new ConcurrentQueue<string>();
             state = State.WAITING;
+            StartedProcesses = new Dictionary<int, DateTime>();
         }
       
         /// <summary>
@@ -48,20 +49,30 @@ namespace gitlab_ci_runner.runner
         /// Need to add System.Management to References manually to enable this.
         /// </summary>
         /// <param name="pid">Process ID.</param>
-        private static void killProcessAndChildren(int pid)
+        private void killProcessAndChildren(int pid, bool isChild = false)
         {
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher
-              ("Select * From Win32_Process Where ParentProcessID=" + pid);
-            
-            ManagementObjectCollection moc = searcher.Get();
-            foreach (ManagementObject mo in moc)
-            {
-                killProcessAndChildren(Convert.ToInt32(mo["ProcessID"]));
-            }
             try
             {
-                Process proc = Process.GetProcessById(pid);
-                proc.Kill();
+                if (StartedProcesses.ContainsKey(pid) || isChild)
+                {
+                    ManagementObjectSearcher searcher = new ManagementObjectSearcher
+                    ("Select * From Win32_Process Where ParentProcessID=" + pid);
+
+                    ManagementObjectCollection moc = searcher.Get();
+                    foreach (ManagementObject mo in moc)
+                    {
+                        killProcessAndChildren(Convert.ToInt32(mo["ProcessID"]), true);
+                    }
+
+                    Process proc = Process.GetProcessById(pid);
+                    if (proc.StartTime.Equals(StartedProcesses[pid]) || isChild)
+                        proc.Kill();
+
+                    proc.Close();
+                }
+
+                if (StartedProcesses.ContainsKey(pid))
+                    StartedProcesses.Remove(pid);
             }
             catch (ArgumentException)
             {
@@ -80,6 +91,12 @@ namespace gitlab_ci_runner.runner
         /// Build internal!
         /// </summary>
         private Process process = null;
+
+        /// <summary>
+        /// StartedProcesses object
+        /// Build internal!
+        /// </summary>
+        private Dictionary<int,DateTime> StartedProcesses;
 
         /// <summary>
         /// Command output
@@ -245,16 +262,12 @@ namespace gitlab_ci_runner.runner
                 outputList.Enqueue(sCommand);
 
                 // Build process
-                if (process == null)
-                    process = new Process();
-                else
-                {
+                if (process != null) {
                     killProcessAndChildren(process.Id);
                     process.Close();
-                    process = null;
-
-                    process = new Process();
                 }
+
+                process = new Process();
 
                 process.StartInfo.UseShellExecute = false;
                 if (Directory.Exists(sProjectDir))
@@ -293,6 +306,8 @@ namespace gitlab_ci_runner.runner
                     int exitCode = -1;
                     // Run the command
                     process.Start();
+                    StartedProcesses.Add(process.Id, process.StartTime);
+
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
 
