@@ -55,24 +55,24 @@ namespace gitlab_ci_runner.runner
             {
                 if (StartedProcesses.ContainsKey(pid) || isChild)
                 {
-                    ManagementObjectSearcher searcher = new ManagementObjectSearcher
-                    ("Select * From Win32_Process Where ParentProcessID=" + pid);
-
-                    ManagementObjectCollection moc = searcher.Get();
-                    foreach (ManagementObject mo in moc)
-                    {
-                        killProcessAndChildren(Convert.ToInt32(mo["ProcessID"]), true);
-                    }
-
                     Process proc = Process.GetProcessById(pid);
                     if (proc.StartTime.Equals(StartedProcesses[pid]) || isChild)
+                    {
+                        ManagementObjectSearcher searcher = new ManagementObjectSearcher
+                        ("Select * From Win32_Process Where ParentProcessID=" + pid);
+
+                        ManagementObjectCollection moc = searcher.Get();
+                        foreach (ManagementObject mo in moc)
+                        {
+                            killProcessAndChildren(Convert.ToInt32(mo["ProcessID"]), true);
+                        }
                         proc.Kill();
 
+                        if (!isChild)
+                            StartedProcesses.Remove(pid);
+                    }
                     proc.Close();
                 }
-
-                if (StartedProcesses.ContainsKey(pid))
-                    StartedProcesses.Remove(pid);
             }
             catch (ArgumentException)
             {
