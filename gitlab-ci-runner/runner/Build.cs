@@ -66,7 +66,12 @@ namespace gitlab_ci_runner.runner
                         {
                             killProcessAndChildren(Convert.ToInt32(mo["ProcessID"]), true);
                         }
-                        proc.Kill();
+
+                        if (!proc.HasExited)
+                        {
+                            Console.WriteLine("Try to kill process {0} PID: {1} IsChild: {2}", proc.ProcessName, pid, isChild.ToString());
+                            proc.Kill();
+                        }
                     }
                     proc.Close();
                 }
@@ -74,6 +79,10 @@ namespace gitlab_ci_runner.runner
             catch (ArgumentException)
             {
                 // Process already exited.
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Kill process {0} failed with exception: {1}\n{2}\n{3}", pid, ex.Message, ex.InnerException, ex.StackTrace);
             }
 
             if (!isChild && StartedProcesses.ContainsKey(pid))
