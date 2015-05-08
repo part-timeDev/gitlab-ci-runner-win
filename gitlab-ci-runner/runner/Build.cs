@@ -67,9 +67,6 @@ namespace gitlab_ci_runner.runner
                             killProcessAndChildren(Convert.ToInt32(mo["ProcessID"]), true);
                         }
                         proc.Kill();
-
-                        if (!isChild)
-                            StartedProcesses.Remove(pid);
                     }
                     proc.Close();
                 }
@@ -78,6 +75,9 @@ namespace gitlab_ci_runner.runner
             {
                 // Process already exited.
             }
+
+            if (!isChild && StartedProcesses.ContainsKey(pid))
+                StartedProcesses.Remove(pid);
         }
 
         /// <summary>
